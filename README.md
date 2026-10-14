@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Next.js Nodemailer
 
-## Getting Started
+A small email-submission app built with Next.js. Visitors enter an email address in the form, and the server sends it to a configured inbox using Nodemailer and SMTP.
 
-First, run the development server:
+## Requirements
+
+- Node.js 20.9 or later
+- npm
+- An SMTP account and its connection details
+
+## Setup
+
+Install dependencies and create a local environment file from the example:
+
+```bash
+npm install
+Copy-Item .env.example .env.local
+```
+
+On macOS or Linux, use `cp .env.example .env.local` for the second command. Fill in the values in `.env.local`:
+
+| Variable | Description |
+| --- | --- |
+| `SMTP_HOST` | SMTP server hostname |
+| `SMTP_PORT` | SMTP port; defaults to `465` when omitted |
+| `SMTP_USER` | SMTP account username |
+| `SMTP_PASS` | SMTP account password or provider key |
+| `MAIL_FROM` | Sender address accepted by your SMTP provider |
+| `MAIL_TO` | Inbox that receives form submissions |
+
+Keep `.env.local` private. Do not commit SMTP credentials or provider keys. For port `465`, the SMTP connection uses TLS; other ports use a non-TLS connection unless the mailer configuration is changed.
+
+## Run Locally
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Email Endpoint
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+`POST /api/send-email` accepts JSON with an `email` string:
 
-## Learn More
+```json
+{
+	"email": "visitor@example.com"
+}
+```
 
-To learn more about Next.js, take a look at the following resources:
+The endpoint validates the input and sends a notification to `MAIL_TO`. It returns `{ "success": true }` when the SMTP provider accepts the message, `400` for invalid input, or `500` if sending fails or the mail configuration is missing.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Scripts
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run dev    # Start the development server
+npm run lint   # Run ESLint
+npm run build  # Create a production build
+npm run start  # Serve the production build
+```
 
-## Deploy on Vercel
+## Project Structure
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `app/page.tsx` — email form and client-side validation
+- `app/api/send-email/route.ts` — request validation and email endpoint
+- `lib/mailer.ts` — server-side Nodemailer SMTP transport
